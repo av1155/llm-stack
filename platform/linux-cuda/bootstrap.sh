@@ -18,12 +18,12 @@ have() { command -v "$1" >/dev/null 2>&1; }
 if have nvcc; then
     log "CUDA toolkit present: $(nvcc --version | grep release | sed 's/^ *//')"
 else
-    log "CUDA toolkit missing, installing cuda-toolkit-13-2"
+    log "CUDA toolkit missing, installing cuda-toolkit-12-9"
     cd /tmp
     wget -q https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
     sudo dpkg -i cuda-keyring_1.1-1_all.deb
     sudo apt-get update
-    sudo apt-get install -y cuda-toolkit-13-2
+    sudo apt-get install -y cuda-toolkit-12-9
     rm -f cuda-keyring_1.1-1_all.deb
 
     BLOCK_MARKER_START="# >>> llm-stack cuda >>>"
@@ -33,8 +33,8 @@ else
         cat >> "${HOME}/.bashrc" <<EOF
 
 ${BLOCK_MARKER_START}
-export PATH=/usr/local/cuda-13.2/bin:\$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda-13.2/lib64:\${LD_LIBRARY_PATH:-}
+export PATH=/usr/local/cuda-12.9/bin:\$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-12.9/lib64:\${LD_LIBRARY_PATH:-}
 ${BLOCK_MARKER_END}
 EOF
         log "wrote CUDA PATH/LD_LIBRARY_PATH block to ~/.bashrc"
