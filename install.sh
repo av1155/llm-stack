@@ -94,14 +94,17 @@ ${BLOCK_MARKER_END}"
 touch "${RC}"
 if grep -qF "${BLOCK_MARKER_START}" "${RC}"; then
     log "updating existing llm-stack block in ${RC}"
-    # sed-based delete is portable across BSD sed (macOS) and GNU sed
-    # (Linux). The earlier awk-based path passed a multi-line variable
-    # via -v which BSD awk on macOS rejects with "newline in string".
-    # -i.llm-stack.bak works on both; the .bak is removed immediately.
-    sed -i.llm-stack.bak \
-        "/^${BLOCK_MARKER_START}\$/,/^${BLOCK_MARKER_END}\$/d" \
-        "${RC}"
-    rm -f "${RC}.llm-stack.bak"
+    # Read via sed, write via cat-and-redirect. Avoids sed -i because:
+    #   (1) BSD awk on macOS choked on -v multi-line values (old bug);
+    #   (2) BSD sed -i refuses to edit symlinks, and the user's rc is
+    #       a stow-managed symlink. cat > "${RC}" follows the symlink
+    #       and writes through to the underlying file, preserving the
+    #       link.
+    TMP_RC="${RC}.llm-stack.tmp"
+    sed "/^${BLOCK_MARKER_START}\$/,/^${BLOCK_MARKER_END}\$/d" \
+        "${RC}" > "${TMP_RC}"
+    cat "${TMP_RC}" > "${RC}"
+    rm -f "${TMP_RC}"
 fi
 log "appending llm-stack block to ${RC}"
 printf '\n%s\n' "${BLOCK}" >> "${RC}"
