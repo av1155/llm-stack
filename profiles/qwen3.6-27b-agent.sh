@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-# Qwen3.6-27B (dense) — Instruct / non-thinking / tool-calling profile.
+# Qwen3.6-27B (dense), Instruct / non-thinking / tool-calling profile.
 #
 # Endpoint: http://${HOST_BIND}:11434/v1   (OpenAI-compatible)
 # Served alias: qwen3.6-27b-agent
 #
-# Used by TradingAgents and other tool-calling clients. See
-# docs/profiles.md for the rationale of choosing 27B dense over 35B-A3B
-# MoE for agentic flows.
+# Used by TradingAgents and other tool-calling clients. See docs/profiles.md
+# for the rationale of choosing 27B dense over 35B-A3B MoE for agentic flows.
 #
 # Sampler: Unsloth's published Qwen3 non-thinking preset
 # (temp 0.7, top-p 0.8, top-k 20, presence-penalty 1.5).
 # See docs/sampler-rationale.md and https://unsloth.ai/docs/models/qwen3.6.
+#
+# Required env (from hosts/${LLM_STACK_HOST}.env):
+#   AGENT_MODEL_DIR, AGENT_MODEL_FILE, AGENT_CTX_SIZE, THREADS
+#
+# Exits: 1 if host config missing or model file not found.
 
 set -euo pipefail
 

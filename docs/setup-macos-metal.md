@@ -13,9 +13,9 @@ git clone https://github.com/av1155/llm-stack.git ~/llm-stack
 
 1. Verifies Homebrew is present (errors with the install link if not).
 2. `brew install llama.cpp` (skips if already installed).
-3. `brew install huggingface-cli` (skips if already installed).
+3. `brew install hf` for the Hugging Face CLI (skips if already installed).
 
-Then it writes an idempotent block to `~/.zshrc` setting `LLM_STACK_HOME`, `LLM_STACK_HOST`, the `qwen-agent` alias, the `qwen` alias (thinking profile is configured on Mac), and `llama-update`.
+It then writes an idempotent block to `~/.zshrc` setting `LLM_STACK_HOME`, `LLM_STACK_HOST`, the `qwen-agent` alias, the `qwen` alias (the thinking profile is configured on Mac), and `llama-update`.
 
 ## Download models
 

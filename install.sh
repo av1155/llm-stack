@@ -3,14 +3,16 @@
 #
 # Detects the platform, runs the matching bootstrap, and writes an
 # idempotent block to the user's shell rc that defines:
-#   - LLM_STACK_HOME       (path to this repo)
-#   - LLM_STACK_HOST       (which file in hosts/ to source at run-time)
-#   - PATH                 (so bin/llama-update etc. are callable)
-#   - alias qwen-agent     (Instruct / port 11434)
-#   - alias qwen           (Thinking / port 1235, only if configured)
+#   LLM_STACK_HOME   (path to this repo)
+#   LLM_STACK_HOST   (which file in hosts/ to source at run-time)
+#   PATH             (so bin/llama-update etc. are callable)
+#   alias qwen-agent (Instruct, port 11434)
+#   alias qwen       (Thinking, port 1235, only if configured)
 #
-# Re-running this script is safe: the block is rewritten in place via
-# marker matching, so values change on disk but nothing duplicates.
+# Re-running is safe. The block is rewritten in place via marker matching,
+# so values change on disk but nothing duplicates.
+#
+# Exits: 0 on success; 1 on unsupported platform or missing host config.
 
 set -euo pipefail
 
@@ -19,9 +21,6 @@ REPO="$(cd "$(dirname "$0")" && pwd)"
 log()  { printf '[install] %s\n' "$*"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
-# ---------------------------------------------------------------------------
-# Platform detect
-# ---------------------------------------------------------------------------
 OS="$(uname -s)"
 case "${OS}" in
     Linux)
@@ -40,9 +39,6 @@ case "${OS}" in
         ;;
 esac
 
-# ---------------------------------------------------------------------------
-# LLM_STACK_HOST resolution
-# ---------------------------------------------------------------------------
 HOST="${LLM_STACK_HOST:-${DEFAULT_HOST}}"
 if [ ! -f "${REPO}/hosts/${HOST}.env" ]; then
     echo "install: no host config at hosts/${HOST}.env" >&2
@@ -53,27 +49,17 @@ if [ ! -f "${REPO}/hosts/${HOST}.env" ]; then
 fi
 log "platform: ${PLATFORM}   host: ${HOST}"
 
-# ---------------------------------------------------------------------------
-# Run platform bootstrap (idempotent)
-# ---------------------------------------------------------------------------
 log "running platform/${PLATFORM}/bootstrap.sh"
 bash "${REPO}/platform/${PLATFORM}/bootstrap.sh"
 
-# ---------------------------------------------------------------------------
-# Choose shell rc
-# ---------------------------------------------------------------------------
 RC="${LLM_STACK_RC:-${DEFAULT_RC}}"
 log "shell rc: ${RC}"
 
-# ---------------------------------------------------------------------------
-# Build the rc block
-# ---------------------------------------------------------------------------
 BLOCK_MARKER_START="# >>> llm-stack >>>"
 BLOCK_MARKER_END="# <<< llm-stack <<<"
 
-# Discover whether this host has a thinking profile configured. If so,
-# include the `qwen` alias; if not, omit it (so a typo doesn't quietly
-# launch a server that immediately errors).
+# Only emit the `qwen` alias when the host actually configures a thinking
+# profile. Otherwise a typo would quietly launch a server that errors out.
 HAS_THINKING=0
 if grep -q '^THINKING_MODEL_DIR=' "${REPO}/hosts/${HOST}.env"; then
     HAS_THINKING=1
@@ -93,9 +79,6 @@ ${THINKING_ALIAS}
 alias llama-update=\"\$LLM_STACK_HOME/bin/llama-update\"
 ${BLOCK_MARKER_END}"
 
-# ---------------------------------------------------------------------------
-# Inject / replace the block in the rc
-# ---------------------------------------------------------------------------
 touch "${RC}"
 if grep -qF "${BLOCK_MARKER_START}" "${RC}"; then
     log "updating existing llm-stack block in ${RC}"
@@ -112,9 +95,6 @@ else
     printf '\n%s\n' "${BLOCK}" >> "${RC}"
 fi
 
-# ---------------------------------------------------------------------------
-# Verify
-# ---------------------------------------------------------------------------
 if have llama-server; then
     log "llama-server: $(llama-server --version 2>&1 | head -1)"
 else

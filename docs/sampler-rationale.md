@@ -2,7 +2,7 @@
 
 Both profiles use Unsloth's published per-mode presets verbatim. See [`references.md`](references.md) for the upstream doc URL.
 
-## Instruct / non-thinking (`qwen3.6-27b-agent`)
+## Instruct, non-thinking (`qwen3.6-27b-agent`)
 
 ```
 --temp 0.7
@@ -13,7 +13,7 @@ Both profiles use Unsloth's published per-mode presets verbatim. See [`reference
 --repeat-penalty 1.0
 ```
 
-Tuned for tool-calling and agent flows: low temperature to keep JSON arguments deterministic, modest presence-penalty to avoid the model getting stuck repeating tool calls, top-k 20 to constrain token choice tightly.
+Tuned for tool-calling and agent flows. Low temperature keeps JSON arguments deterministic. The modest presence-penalty stops the model from getting stuck repeating tool calls. `top-k 20` constrains token choice tightly.
 
 ## Thinking (`qwen3.6-35b-a3b-thinking`)
 
@@ -25,18 +25,18 @@ Tuned for tool-calling and agent flows: low temperature to keep JSON arguments d
 --presence-penalty 1.5
 ```
 
-Higher temperature + top-p to let the model explore reasoning paths during the `<think>` block. The same top-k and presence-penalty values still apply outside the think tags.
+Higher temperature and top-p let the model explore reasoning paths during the `<think>` block. The same top-k and presence-penalty values still apply outside the think tags.
 
 ## Why these exact values
 
 These are Unsloth's recommendations per their Qwen3.6 GGUF cards. Deviating from them tends to cause one of two failures:
 
-- Lower temp/top-p → repetition loops, especially in long Deep runs.
-- Higher temp/top-p → JSON argument corruption in tool calls.
+- Lower temp or top-p, repetition loops, especially in long Deep runs.
+- Higher temp or top-p, JSON argument corruption in tool calls.
 
-The presence-penalty of 1.5 is unusually high; that's intentional to combat the SSM layers' tendency to drift into preferred-token attractors over long contexts.
+The presence-penalty of 1.5 is unusually high. That's intentional, to combat the SSM layers' tendency to drift into preferred-token attractors over long contexts.
 
 ## What stays at default
 
-- `--top-n-sigma`, `--xtc-*`, `--dry-*`, `--mirostat*` — all disabled (Unsloth doesn't recommend them for Qwen3.6).
-- `--typical-p` — disabled (1.0).
+- `--top-n-sigma`, `--xtc-*`, `--dry-*`, `--mirostat*` are all disabled (Unsloth doesn't recommend them for Qwen3.6).
+- `--typical-p` is disabled (1.0).

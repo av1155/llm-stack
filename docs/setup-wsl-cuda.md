@@ -1,12 +1,12 @@
 # Setup: WSL2 + NVIDIA CUDA
 
-Reproduce the Andrea-PC stack from scratch. Tested with RTX 5090 (Blackwell, SM 120), but the procedure works for any CUDA arch ≥ 7.5 — just set `CUDA_ARCH` accordingly.
+Reproduce the Andrea-PC stack from scratch. Tested with RTX 5090 (Blackwell, SM 120). The procedure works for any CUDA arch 7.5 or higher; set `CUDA_ARCH` accordingly.
 
-## Hardware / OS assumptions
+## Hardware and OS assumptions
 
 - Windows 11 host with NVIDIA GPU.
 - WSL2 + Ubuntu 24.04 (`wsl --install -d Ubuntu`).
-- Recent NVIDIA GeForce driver installed on the Windows host (CUDA toolkit on the WSL side does NOT install drivers; the host driver carries through via `/dev/dxg`).
+- Recent NVIDIA GeForce driver installed on the Windows host. The CUDA toolkit on the WSL side does NOT install drivers; the host driver carries through via `/dev/dxg`.
 
 ## One-shot install
 
@@ -21,7 +21,7 @@ git clone https://github.com/av1155/llm-stack.git ~/llm-stack
 
 1. CUDA toolkit 13.2 (`cuda-toolkit-13-2` from the NVIDIA WSL repo).
 2. Build deps (`build-essential cmake git ccache ninja-build libcurl4-openssl-dev libssl-dev pkg-config`).
-3. `huggingface-cli` via `pipx`.
+3. `hf` (the Hugging Face CLI, from `huggingface_hub[cli]`) via `pipx`.
 4. `~/llama.cpp/` cloned from `ggml-org/llama.cpp`.
 5. CUDA-enabled build with these CMake flags:
    ```
@@ -31,7 +31,7 @@ git clone https://github.com/av1155/llm-stack.git ~/llm-stack
    -DGGML_CUDA_FA_ALL_QUANTS=ON
    ```
 
-Then it writes an idempotent block to `~/.bashrc` setting `LLM_STACK_HOME`, `LLM_STACK_HOST`, and the `qwen-agent` / `llama-update` aliases.
+It then writes an idempotent block to `~/.bashrc` setting `LLM_STACK_HOME`, `LLM_STACK_HOST`, and the `qwen-agent` / `llama-update` aliases.
 
 ## What each CMake flag does
 

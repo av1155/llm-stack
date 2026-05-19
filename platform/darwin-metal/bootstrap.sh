@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Idempotent bootstrap for macOS + Apple Silicon (Metal backend).
-# Installs only what's missing via Homebrew. Safe to re-run.
+# Bootstrap for macOS + Apple Silicon (Metal backend). Idempotent: installs
+# only what's missing via Homebrew. Safe to re-run.
+#
+# Exits: 0 on success; 1 if Homebrew is missing.
 
 set -euo pipefail
 
@@ -12,7 +14,6 @@ if ! have brew; then
     exit 1
 fi
 
-# --- llama.cpp via Homebrew -------------------------------------------------
 if brew list --formula llama.cpp >/dev/null 2>&1; then
     log "llama.cpp already installed: $(llama-server --version 2>&1 | head -1)"
 else
@@ -20,12 +21,13 @@ else
     brew install llama.cpp
 fi
 
-# --- huggingface-cli --------------------------------------------------------
-if have huggingface-cli; then
-    log "huggingface-cli present"
+# The formula was renamed from `huggingface-cli` to `hf` upstream. The `hf`
+# formula still ships a `huggingface-cli` shim for the old binary name.
+if have hf; then
+    log "hf present: $(hf version 2>/dev/null | head -1)"
 else
-    log "installing huggingface-cli via brew"
-    brew install huggingface-cli
+    log "installing hf via brew"
+    brew install hf
 fi
 
 log "darwin-metal bootstrap complete"

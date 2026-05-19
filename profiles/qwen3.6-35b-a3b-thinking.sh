@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
-# Qwen3.6-35B-A3B (MoE, ~3B active params/token) — Thinking / vision
-# profile for agentic coding (OpenCode, Claude Code, etc.).
+# Qwen3.6-35B-A3B (MoE, ~3B active params/token), Thinking / vision profile
+# for agentic coding (OpenCode, Claude Code, etc.).
 #
 # Endpoint: http://${HOST_BIND}:1235/v1   (OpenAI-compatible)
 # Served alias: qwen3.6-35b-a3b
 #
 # Vision tower (mmproj) is loaded so multimodal coding flows work.
-# `preserve_thinking` keeps <think> traces accessible to clients that
-# echo them back across turns (DeepSeek-style). See docs/profiles.md.
+# `preserve_thinking` keeps <think> traces accessible to clients that echo
+# them back across turns (DeepSeek-style). See docs/profiles.md.
 #
 # Sampler: Unsloth's Qwen3 thinking preset
 # (temp 1.0, top-p 0.95, top-k 20, presence-penalty 1.5).
+#
+# Required env (from hosts/${LLM_STACK_HOST}.env):
+#   THINKING_MODEL_DIR, THINKING_MODEL_FILE, THINKING_MMPROJ_FILE,
+#   THINKING_CTX_SIZE, THREADS
+#
+# Exits: 1 if host config or model files missing; 2 if the host has no
+#        THINKING_* block (thinking profile not enabled on this host).
 
 set -euo pipefail
 
