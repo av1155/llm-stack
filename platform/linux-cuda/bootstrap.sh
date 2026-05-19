@@ -50,13 +50,16 @@ else
     log "apt build deps already installed"
 fi
 
-# --- huggingface-cli --------------------------------------------------------
+# --- huggingface-cli (optional — only needed by bin/models) -----------------
 if have huggingface-cli; then
     log "huggingface-cli present"
-else
+elif have pipx; then
     log "installing huggingface_hub[cli] via pipx"
-    have pipx || sudo apt-get install -y pipx
     pipx install "huggingface_hub[cli]"
+else
+    log "skipping huggingface-cli (pipx not installed)"
+    log "  to install later: sudo apt-get install pipx && pipx install 'huggingface_hub[cli]'"
+    log "  only needed by bin/models; nothing else in the stack requires it"
 fi
 
 # --- llama.cpp source clone + build ----------------------------------------
