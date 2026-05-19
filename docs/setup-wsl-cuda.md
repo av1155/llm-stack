@@ -19,7 +19,7 @@ git clone https://github.com/av1155/llm-stack.git ~/llm-stack
 
 `install.sh` runs `platform/linux-cuda/bootstrap.sh`, which installs only what's missing:
 
-1. CUDA toolkit 12.9 (`cuda-toolkit-12-9` from the NVIDIA WSL repo). 12.x is the Blackwell-supported line per NVIDIA's [Blackwell migration guide](https://forums.developer.nvidia.com/t/software-migration-guide-for-nvidia-blackwell-rtx-gpus-a-guide-to-cuda-12-8-pytorch-tensorrt-and-llama-cpp/321330); 13.1/13.2 have known kernel bugs on Blackwell (gibberish output on certain quants, cuBLAS FP4 scaling regression) — avoid until 13.3+ ships the documented fix.
+1. CUDA toolkit 12.9 (`cuda-toolkit-12-9` from the NVIDIA WSL repo). 12.x is the Blackwell-supported line per NVIDIA's [Blackwell migration guide](https://forums.developer.nvidia.com/t/software-migration-guide-for-nvidia-blackwell-rtx-gpus-a-guide-to-cuda-12-8-pytorch-tensorrt-and-llama-cpp/321330); 13.1/13.2 have known kernel bugs on Blackwell (gibberish output on certain quants, cuBLAS FP4 scaling regression). Avoid until 13.3+ ships the documented fix.
 2. Build deps (`build-essential cmake git ccache ninja-build libcurl4-openssl-dev libssl-dev pkg-config`).
 3. `hf` (the Hugging Face CLI, from `huggingface_hub[cli]`) via `pipx`.
 4. `~/llama.cpp/` cloned from `ggml-org/llama.cpp`.
