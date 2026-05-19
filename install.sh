@@ -94,18 +94,17 @@ ${BLOCK_MARKER_END}"
 touch "${RC}"
 if grep -qF "${BLOCK_MARKER_START}" "${RC}"; then
     log "updating existing llm-stack block in ${RC}"
-    awk -v start="${BLOCK_MARKER_START}" -v end="${BLOCK_MARKER_END}" -v block="${BLOCK}" '
-        BEGIN { in_block = 0; printed = 0 }
-        $0 == start { in_block = 1; print block; printed = 1; next }
-        $0 == end   { in_block = 0; next }
-        !in_block   { print }
-        END { if (!printed) print block }
-    ' "${RC}" > "${RC}.llm-stack.tmp"
-    mv "${RC}.llm-stack.tmp" "${RC}"
-else
-    log "appending llm-stack block to ${RC}"
-    printf '\n%s\n' "${BLOCK}" >> "${RC}"
+    # sed-based delete is portable across BSD sed (macOS) and GNU sed
+    # (Linux). The earlier awk-based path passed a multi-line variable
+    # via -v which BSD awk on macOS rejects with "newline in string".
+    # -i.llm-stack.bak works on both; the .bak is removed immediately.
+    sed -i.llm-stack.bak \
+        "/^${BLOCK_MARKER_START}\$/,/^${BLOCK_MARKER_END}\$/d" \
+        "${RC}"
+    rm -f "${RC}.llm-stack.bak"
 fi
+log "appending llm-stack block to ${RC}"
+printf '\n%s\n' "${BLOCK}" >> "${RC}"
 
 if have llama-server; then
     log "llama-server: $(llama-server --version 2>&1 | head -1)"
