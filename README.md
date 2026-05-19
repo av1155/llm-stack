@@ -1,10 +1,12 @@
 # llm-stack
 
-Personal cross-platform launch + maintenance stack for [Unsloth's Qwen3.6 GGUFs](https://unsloth.ai/docs/models/qwen3.6) running on [llama.cpp](https://github.com/ggml-org/llama.cpp). Runs on both Linux + NVIDIA CUDA (WSL2 or bare metal) and macOS + Apple Silicon (Metal) from one repo.
+Personal cross-platform launch + maintenance stack for **open-weights GGUF models** on [llama.cpp](https://github.com/ggml-org/llama.cpp). Runs on both Linux + NVIDIA CUDA (WSL2 or bare metal) and macOS + Apple Silicon (Metal) from one repo.
+
+The structure is model-agnostic — drop in a new `profiles/<name>.sh` for any GGUF you want to serve. Currently ships profiles for [Unsloth's Qwen3.6](https://unsloth.ai/docs/models/qwen3.6) (27B dense for tool-calling, 35B-A3B MoE for thinking/coding), the current best open-weights models for these use cases.
 
 ## What's in here
 
-- **Profile scripts** for two well-tuned launch configurations:
+- **Profile scripts.** Two ship today (tuned for the current best open-weights models I run); add your own per the "Adding a new profile" section below.
   - `qwen3.6-27b-agent` (Instruct / tool-calling, port 11434) — for agentic tool callers like TradingAgents.
   - `qwen3.6-35b-a3b-thinking` (Thinking / vision / coding, port 1235) — for OpenCode and similar.
 - **Per-host env files** that own the resource-side knobs (model path, ctx-size, threads, host bind, extra flags). The profile scripts are platform-agnostic.

@@ -1,5 +1,7 @@
 # llm-stack docs
 
+`profiles.md`, `sampler-rationale.md`, and `references.md` cover the currently shipped Qwen3.6 profiles. Future profiles (other open-weights models) get their own additions to these docs.
+
 | Doc | What it covers |
 |---|---|
 | [`profiles.md`](profiles.md) | Why 27B-dense for tool-calling, why 35B-A3B-MoE for thinking/coding; per-profile rationale carried over from the original launcher comments. |
