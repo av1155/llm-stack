@@ -57,16 +57,15 @@ else
 fi
 
 # hf (Hugging Face CLI). Only used by bin/models; the rest of the stack
-# doesn't need it. The Python package is still `huggingface_hub[cli]`; the
-# binary it ships was renamed from `huggingface-cli` to `hf`.
+# doesn't need it. Uses the standalone installer recommended by
+# huggingface.co/docs/huggingface_hub/main/en/guides/cli (option 1).
+# Drops the binary at ~/.local/bin/hf (already on PATH via this bashrc).
+# No sudo, no pipx, no Python venv around the binary.
 if have hf; then
-    log "hf present"
-elif have pipx; then
-    log "installing huggingface_hub[cli] via pipx"
-    pipx install "huggingface_hub[cli]"
+    log "hf present: $(hf version 2>/dev/null | head -1)"
 else
-    log "skipping hf (pipx not installed)"
-    log "  to install later: sudo apt-get install pipx && pipx install 'huggingface_hub[cli]'"
+    log "installing hf via the standalone installer"
+    curl -LsSf https://hf.co/cli/install.sh | bash
 fi
 
 LLAMACPP_REPO="${LLAMACPP_REPO:-$HOME/llama.cpp}"

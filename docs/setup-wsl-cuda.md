@@ -21,7 +21,7 @@ git clone https://github.com/av1155/llm-stack.git ~/llm-stack
 
 1. CUDA toolkit 12.9 (`cuda-toolkit-12-9` from the NVIDIA WSL repo). 12.x is the Blackwell-supported line per NVIDIA's [Blackwell migration guide](https://forums.developer.nvidia.com/t/software-migration-guide-for-nvidia-blackwell-rtx-gpus-a-guide-to-cuda-12-8-pytorch-tensorrt-and-llama-cpp/321330); 13.1/13.2 have known kernel bugs on Blackwell (gibberish output on certain quants, cuBLAS FP4 scaling regression). Avoid until 13.3+ ships the documented fix.
 2. Build deps (`build-essential cmake git ccache ninja-build libcurl4-openssl-dev libssl-dev pkg-config`).
-3. `hf` (the Hugging Face CLI, from `huggingface_hub[cli]`) via `pipx`.
+3. `hf` (the Hugging Face CLI) via the [standalone installer](https://huggingface.co/docs/huggingface_hub/main/en/guides/cli#standalone-installer-recommended) (`curl -LsSf https://hf.co/cli/install.sh | bash`). Drops the binary at `~/.local/bin/hf`; no Python venv or pipx required.
 4. `~/llama.cpp/` cloned from `ggml-org/llama.cpp`.
 5. CUDA-enabled build with these CMake flags:
    ```
