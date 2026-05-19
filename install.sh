@@ -58,11 +58,17 @@ log "shell rc: ${RC}"
 BLOCK_MARKER_START="# >>> llm-stack >>>"
 BLOCK_MARKER_END="# <<< llm-stack <<<"
 
-# Only emit the `qwen` alias when the host actually configures a thinking
-# profile. Otherwise a typo would quietly launch a server that errors out.
+# Only emit conditional aliases when the host actually configures the
+# corresponding profile. Otherwise a typo would quietly launch a server
+# that errors out.
 HAS_THINKING=0
 if grep -q '^THINKING_MODEL_DIR=' "${REPO}/hosts/${HOST}.env"; then
     HAS_THINKING=1
+fi
+
+HAS_MTP=0
+if grep -q '^MTP_AGENT_MODEL_DIR=' "${REPO}/hosts/${HOST}.env"; then
+    HAS_MTP=1
 fi
 
 THINKING_ALIAS=""
@@ -70,11 +76,17 @@ if [ "${HAS_THINKING}" = 1 ]; then
     THINKING_ALIAS='alias qwen="$LLM_STACK_HOME/profiles/qwen3.6-35b-a3b-thinking.sh"'
 fi
 
+MTP_ALIAS=""
+if [ "${HAS_MTP}" = 1 ]; then
+    MTP_ALIAS='alias qwen-agent-mtp="$LLM_STACK_HOME/profiles/qwen3.6-27b-agent-mtp.sh"'
+fi
+
 BLOCK="${BLOCK_MARKER_START}
 export LLM_STACK_HOME=\"${REPO}\"
 export LLM_STACK_HOST=\"${HOST}\"
 export PATH=\"\$LLM_STACK_HOME/bin:\$PATH\"
 alias qwen-agent=\"\$LLM_STACK_HOME/profiles/qwen3.6-27b-agent.sh\"
+${MTP_ALIAS}
 ${THINKING_ALIAS}
 alias llama-update=\"\$LLM_STACK_HOME/bin/llama-update\"
 ${BLOCK_MARKER_END}"
@@ -109,6 +121,12 @@ Next:
   - Open a new shell (or 'source ${RC}') to pick up aliases.
   - 'qwen-agent' starts the Instruct/tool-calling server on port 11434.
 EOF
+
+if [ "${HAS_MTP}" = 1 ]; then
+    cat <<EOF
+  - 'qwen-agent-mtp' starts the MTP variant on port 11434 (~1.4x faster).
+EOF
+fi
 
 if [ "${HAS_THINKING}" = 1 ]; then
     cat <<EOF

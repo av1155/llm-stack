@@ -3,6 +3,7 @@
 # ~/models/), laid out as one HF-repo-named directory per model:
 #
 #   ~/models/Qwen3.6-27B-GGUF/Qwen3.6-27B-UD-Q6_K_XL.gguf
+#   ~/models/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q6_K_XL.gguf
 #   ~/models/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
 #   ~/models/Qwen3.6-35B-A3B-GGUF/mmproj-F32.gguf
 #
@@ -13,8 +14,9 @@
 #   MODELS_HOME   destination root (default: $HOME/models)
 #
 # Usage:
-#   bin/models all                          # both profiles
+#   bin/models all                          # all three profiles
 #   bin/models qwen3.6-27b-agent            # just the 27B dense GGUF
+#   bin/models qwen3.6-27b-agent-mtp        # 27B MTP variant (faster gen)
 #   bin/models qwen3.6-35b-a3b-thinking     # the 35B-A3B GGUF + mmproj
 
 set -euo pipefail
@@ -23,7 +25,7 @@ MODELS_HOME="${MODELS_HOME:-$HOME/models}"
 
 usage() {
     cat <<'EOF'
-Usage: models {all|qwen3.6-27b-agent|qwen3.6-35b-a3b-thinking}
+Usage: models {all|qwen3.6-27b-agent|qwen3.6-27b-agent-mtp|qwen3.6-35b-a3b-thinking}
 
 Downloads canonical Unsloth GGUFs to $MODELS_HOME/<repo-basename>/.
 Default MODELS_HOME is $HOME/models.
@@ -35,6 +37,15 @@ download_27b_agent() {
     mkdir -p "${target}"
     echo "[models] Qwen3.6-27B-UD-Q6_K_XL -> ${target}"
     hf download unsloth/Qwen3.6-27B-GGUF \
+        Qwen3.6-27B-UD-Q6_K_XL.gguf \
+        --local-dir "${target}"
+}
+
+download_27b_agent_mtp() {
+    local target="${MODELS_HOME}/Qwen3.6-27B-MTP-GGUF"
+    mkdir -p "${target}"
+    echo "[models] Qwen3.6-27B-UD-Q6_K_XL (MTP variant) -> ${target}"
+    hf download unsloth/Qwen3.6-27B-MTP-GGUF \
         Qwen3.6-27B-UD-Q6_K_XL.gguf \
         --local-dir "${target}"
 }
@@ -52,10 +63,14 @@ download_35b_a3b_thinking() {
 case "${1:-}" in
     all)
         download_27b_agent
+        download_27b_agent_mtp
         download_35b_a3b_thinking
         ;;
     qwen3.6-27b-agent)
         download_27b_agent
+        ;;
+    qwen3.6-27b-agent-mtp)
+        download_27b_agent_mtp
         ;;
     qwen3.6-35b-a3b-thinking)
         download_35b_a3b_thinking
