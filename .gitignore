@@ -1,0 +1,10 @@
+*.tmp
+*.bak
+.DS_Store
+
+# Anything matching a personal host file pattern that the user might not
+# want committed (uncomment if you decide to keep your real hosts/*.env
+# files local-only):
+# hosts/*.env
+# !hosts/default.env
+# !hosts/example.*.env

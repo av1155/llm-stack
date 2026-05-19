@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Cross-platform dispatcher for refreshing the llama.cpp install.
+# - Linux: source-rebuild via platform/linux-cuda/update.sh
+# - macOS: brew upgrade via platform/darwin-metal/update.sh
+
+set -euo pipefail
+
+REPO="${LLM_STACK_HOME:-$(cd "$(dirname "$0")/.." && pwd)}"
+
+case "$(uname -s)" in
+    Linux)
+        exec "${REPO}/platform/linux-cuda/update.sh" "$@"
+        ;;
+    Darwin)
+        exec "${REPO}/platform/darwin-metal/update.sh" "$@"
+        ;;
+    *)
+        echo "llama-update: unsupported platform: $(uname -s)" >&2
+        exit 1
+        ;;
+esac

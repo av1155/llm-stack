@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# llm-stack top-level installer.
+#
+# Detects the platform, runs the matching bootstrap, and writes an
+# idempotent block to the user's shell rc that defines:
+#   - LLM_STACK_HOME       (path to this repo)
+#   - LLM_STACK_HOST       (which file in hosts/ to source at run-time)
+#   - PATH                 (so bin/llama-update etc. are callable)
+#   - alias qwen-agent     (Instruct / port 11434)
+#   - alias qwen           (Thinking / port 1235, only if configured)
+#
+# Re-running this script is safe: the block is rewritten in place via
+# marker matching, so values change on disk but nothing duplicates.
+
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$0")" && pwd)"
+
+log()  { printf '[install] %s\n' "$*"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# ---------------------------------------------------------------------------
+# Platform detect
+# ---------------------------------------------------------------------------
+OS="$(uname -s)"
+case "${OS}" in
+    Linux)
+        PLATFORM="linux-cuda"
+        DEFAULT_HOST="andrea-pc"
+        DEFAULT_RC="${HOME}/.bashrc"
+        ;;
+    Darwin)
+        PLATFORM="darwin-metal"
+        DEFAULT_HOST="mac-m4-max"
+        DEFAULT_RC="${HOME}/.zshrc"
+        ;;
+    *)
+        echo "install: unsupported platform: ${OS}" >&2
+        exit 1
+        ;;
+esac
+
+# ---------------------------------------------------------------------------
+# LLM_STACK_HOST resolution
+# ---------------------------------------------------------------------------
+HOST="${LLM_STACK_HOST:-${DEFAULT_HOST}}"
+if [ ! -f "${REPO}/hosts/${HOST}.env" ]; then
+    echo "install: no host config at hosts/${HOST}.env" >&2
+    echo "Copy one of the example files and adjust:" >&2
+    echo "  cp hosts/example.${PLATFORM}.env hosts/${HOST}.env" >&2
+    echo "Or run again with LLM_STACK_HOST=<existing-name>" >&2
+    exit 1
+fi
+log "platform: ${PLATFORM}   host: ${HOST}"
+
+# ---------------------------------------------------------------------------
+# Run platform bootstrap (idempotent)
+# ---------------------------------------------------------------------------
+log "running platform/${PLATFORM}/bootstrap.sh"
+bash "${REPO}/platform/${PLATFORM}/bootstrap.sh"
+
+# ---------------------------------------------------------------------------
+# Choose shell rc
+# ---------------------------------------------------------------------------
+RC="${LLM_STACK_RC:-${DEFAULT_RC}}"
+log "shell rc: ${RC}"
+
+# ---------------------------------------------------------------------------
+# Build the rc block
+# ---------------------------------------------------------------------------
+BLOCK_MARKER_START="# >>> llm-stack >>>"
+BLOCK_MARKER_END="# <<< llm-stack <<<"
+
+# Discover whether this host has a thinking profile configured. If so,
+# include the `qwen` alias; if not, omit it (so a typo doesn't quietly
+# launch a server that immediately errors).
+HAS_THINKING=0
+if grep -q '^THINKING_MODEL_DIR=' "${REPO}/hosts/${HOST}.env"; then
+    HAS_THINKING=1
+fi
+
+THINKING_ALIAS=""
+if [ "${HAS_THINKING}" = 1 ]; then
+    THINKING_ALIAS='alias qwen="$LLM_STACK_HOME/profiles/qwen3.6-35b-a3b-thinking.sh"'
+fi
+
+BLOCK="${BLOCK_MARKER_START}
+export LLM_STACK_HOME=\"${REPO}\"
+export LLM_STACK_HOST=\"${HOST}\"
+export PATH=\"\$LLM_STACK_HOME/bin:\$PATH\"
+alias qwen-agent=\"\$LLM_STACK_HOME/profiles/qwen3.6-27b-agent.sh\"
+${THINKING_ALIAS}
+alias llama-update=\"\$LLM_STACK_HOME/bin/llama-update\"
+${BLOCK_MARKER_END}"
+
+# ---------------------------------------------------------------------------
+# Inject / replace the block in the rc
+# ---------------------------------------------------------------------------
+touch "${RC}"
+if grep -qF "${BLOCK_MARKER_START}" "${RC}"; then
+    log "updating existing llm-stack block in ${RC}"
+    awk -v start="${BLOCK_MARKER_START}" -v end="${BLOCK_MARKER_END}" -v block="${BLOCK}" '
+        BEGIN { in_block = 0; printed = 0 }
+        $0 == start { in_block = 1; print block; printed = 1; next }
+        $0 == end   { in_block = 0; next }
+        !in_block   { print }
+        END { if (!printed) print block }
+    ' "${RC}" > "${RC}.llm-stack.tmp"
+    mv "${RC}.llm-stack.tmp" "${RC}"
+else
+    log "appending llm-stack block to ${RC}"
+    printf '\n%s\n' "${BLOCK}" >> "${RC}"
+fi
+
+# ---------------------------------------------------------------------------
+# Verify
+# ---------------------------------------------------------------------------
+if have llama-server; then
+    log "llama-server: $(llama-server --version 2>&1 | head -1)"
+else
+    log "WARNING: llama-server not on PATH yet. Open a new shell or 'source ${RC}'."
+fi
+
+cat <<EOF
+
+[install] Done.
+
+Next:
+  - Open a new shell (or 'source ${RC}') to pick up aliases.
+  - 'qwen-agent' starts the Instruct/tool-calling server on port 11434.
+EOF
+
+if [ "${HAS_THINKING}" = 1 ]; then
+    cat <<EOF
+  - 'qwen' starts the Thinking/vision server on port 1235.
+EOF
+fi
+
+cat <<EOF
+  - 'llama-update' refreshes llama.cpp (source rebuild on Linux, brew on macOS).
+  - '\$LLM_STACK_HOME/bin/models all' downloads model GGUFs if they're missing.
+EOF
